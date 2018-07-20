@@ -1,0 +1,11 @@
+D:\Visual Studio Project\MyForm\MyForm\bin\Debug\MyForm.exe.config
+D:\Visual Studio Project\MyForm\MyForm\bin\Debug\MyForm.exe
+D:\Visual Studio Project\MyForm\MyForm\bin\Debug\MyForm.pdb
+D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.csprojAssemblyReference.cache
+D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.Form1.resources
+D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.Properties.Resources.resources
+D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.csproj.GenerateResource.cache
+D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.csproj.CoreCompileInputs.cache
+D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.exe
+D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.pdb
+D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.UserControl1.resources
