@@ -21,21 +21,37 @@ namespace MyForm
         
         public Form1()
         {
+            AutoScale(this);
             Image image1 = Image.FromFile(@"image.jpg");
             this.BackgroundImage = image1;
             this.BackgroundImageLayout = ImageLayout.Stretch;
- 
-
-
-
 
             InitializeComponent();
             ComDevice.PortName = "COM3";
             ComDevice.BaudRate = 9600;
+            
         }
 
+        #region 窗体缩放
+        public void AutoScale(Form frm)
+        {
+            frm.Tag = frm.Width.ToString() + "," + frm.Height.ToString();
+            frm.SizeChanged += new EventHandler(Form1_Resize);
+        }
 
-       
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            string[] tmp = ((Form)sender).Tag.ToString().Split(',');
+            float width = (float)((Form)sender).Width / (float)Convert.ToInt16(tmp[0]);
+            float heigth = (float)((Form)sender).Height / (float)Convert.ToInt16(tmp[1]);
+            ((Form)sender).Tag = ((Form)sender).Width.ToString() + "," + ((Form)sender).Height;
+            foreach (Control control in ((Form)sender).Controls)
+            {
+                control.Scale(new SizeF(width, heigth));
+            }
+        }
+        #endregion
+
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -69,6 +85,7 @@ namespace MyForm
             Image image2 = Image.FromFile(@"button_logo1.jpg");
             this.button1.BackgroundImage = image2;
             this.button1.BackgroundImageLayout = ImageLayout.Stretch;
+            
         }
         private void button1_MouseLeave(object sender, EventArgs e)
         {
@@ -104,5 +121,7 @@ namespace MyForm
         {
 
         }
+
+        
     }
 }

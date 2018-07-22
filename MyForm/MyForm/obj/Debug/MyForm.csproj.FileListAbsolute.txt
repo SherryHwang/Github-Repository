@@ -9,3 +9,14 @@ D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.csproj.CoreCompileInputs
 D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.exe
 D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.pdb
 D:\Visual Studio Project\MyForm\MyForm\obj\Debug\MyForm.UserControl1.resources
+D:\Github-Repository\Github-Repository\MyForm\MyForm\bin\Debug\MyForm.exe.config
+D:\Github-Repository\Github-Repository\MyForm\MyForm\bin\Debug\MyForm.exe
+D:\Github-Repository\Github-Repository\MyForm\MyForm\bin\Debug\MyForm.pdb
+D:\Github-Repository\Github-Repository\MyForm\MyForm\obj\Debug\MyForm.csprojAssemblyReference.cache
+D:\Github-Repository\Github-Repository\MyForm\MyForm\obj\Debug\MyForm.Form1.resources
+D:\Github-Repository\Github-Repository\MyForm\MyForm\obj\Debug\MyForm.Properties.Resources.resources
+D:\Github-Repository\Github-Repository\MyForm\MyForm\obj\Debug\MyForm.UserControl1.resources
+D:\Github-Repository\Github-Repository\MyForm\MyForm\obj\Debug\MyForm.csproj.GenerateResource.cache
+D:\Github-Repository\Github-Repository\MyForm\MyForm\obj\Debug\MyForm.csproj.CoreCompileInputs.cache
+D:\Github-Repository\Github-Repository\MyForm\MyForm\obj\Debug\MyForm.exe
+D:\Github-Repository\Github-Repository\MyForm\MyForm\obj\Debug\MyForm.pdb
