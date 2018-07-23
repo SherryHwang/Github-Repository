@@ -21,11 +21,11 @@ namespace MyForm
         
         public Form1()
         {
-            AutoScale(this);
+            
             Image image1 = Image.FromFile(@"image.jpg");
             this.BackgroundImage = image1;
             this.BackgroundImageLayout = ImageLayout.Stretch;
-
+            AutoScale(this);
             InitializeComponent();
             ComDevice.PortName = "COM3";
             ComDevice.BaudRate = 9600;
@@ -101,6 +101,7 @@ namespace MyForm
             this.button1.BackgroundImageLayout = ImageLayout.Stretch;
         }
 
+        //重新绘制TabControl的格式
         private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
         {
             
@@ -116,12 +117,31 @@ namespace MyForm
 
             e.Graphics.DrawString(text, SystemInformation.MenuFont, brush, e.Bounds, sf);
         }
+        /*
+         *  private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            
+            string text = ((TabControl)sender).TabPages[e.Index].Text;
 
+            SolidBrush brush = new SolidBrush(Color.Black);
+
+            StringFormat sf = new StringFormat(StringFormatFlags.DirectionRightToLeft);
+
+            sf.LineAlignment = StringAlignment.Center;
+
+            sf.Alignment = StringAlignment.Center;
+
+            e.Graphics.DrawString(text, SystemInformation.MenuFont, brush, e.Bounds, sf);
+        }
+         */
         private void textBox3_TextChanged(object sender, EventArgs e)
         {
 
         }
 
-        
+        private void button2_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("click");
+        }
     }
 }
