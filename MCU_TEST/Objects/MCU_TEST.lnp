@@ -1,0 +1,9 @@
+".\Objects\MAIN.obj",
+".\Objects\IIC.obj",
+".\Objects\LCD1602.obj",
+".\Objects\PCF8591.obj",
+".\Objects\Delay.obj",
+".\Objects\SENSOR.obj" 
+TO ".\Objects\MCU_TEST" 
+PRINT(".\Listings\MCU_TEST.m51") RAMSIZE(256) 
+CODE( 0X0000-0X1FFF )

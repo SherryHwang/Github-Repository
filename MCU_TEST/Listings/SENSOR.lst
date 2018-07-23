@@ -1,0 +1,207 @@
+C51 COMPILER V9.56.0.0   SENSOR                                                            07/24/2018 01:07:00 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE SENSOR
+OBJECT MODULE PLACED IN .\Objects\SENSOR.obj
+COMPILER INVOKED BY: D:\Software\C51\C51\BIN\C51.EXE SENSOR\SENSOR.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\IIC;.\LCD1602;.\D
+                    -ELAY;.\PCF8591;.\SENSOR) DEBUG OBJECTEXTEND PRINT(.\Listings\SENSOR.lst) TABS(2) OBJECT(.\Objects\SENSOR.obj)
+
+line level    source
+
+   1          #include "DELAY.h"
+   2          #include "reg52.h"
+   3          #include "PCF8591.h"
+   4          #include "LCD1602.h"
+   5          #include "SENSOR.h"
+   6          
+   7          sbit LED = P1 ^ 0;            
+   8          sbit BUZZER = P1 ^ 1; 
+   9          sbit FAN = P1 ^ 2;           //风扇
+  10          sbit Dcmotor = P1 ^ 3;         //直流电机
+  11          
+  12          void DCMOTOR_RUN()           //直流电机转动
+  13          {
+  14   1        Dcmotor = 1;
+  15   1      }
+  16          
+  17          void MQ2_RUN()  //处理MQ2数据并显示  烟雾
+  18          {
+  19   1        uchar D = 0;
+  20   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
+  21   1        if(D>60)
+  22   1        {
+  23   2          lcd1602_write_string(0,1,"WARNING         ");
+  24   2          lcd1602_write_string(0,1,"FROM Q2");
+  25   2          LED = 1;//LED亮
+  26   2          FAN=1;  //风扇转
+  27   2          
+  28   2          BUZZER = 0;//蜂鸣器响
+  29   2          Delay(100);
+  30   2          BUZZER = 1;//蜂鸣器不响
+  31   2          Delay(100);
+  32   2          BUZZER = 0;//蜂鸣器响
+  33   2          Delay(100);
+  34   2          BUZZER = 1;//蜂鸣器不响   
+  35   2        }
+  36   1        else
+  37   1        {
+  38   2          FAN=0;     //风扇不转
+  39   2          LED = 0;   //LED灯不亮
+  40   2          BUZZER = 1; //蜂鸣器不响
+  41   2          lcd1602_write_string(0,1,"THERE IS SAFE");
+  42   2        }
+  43   1        SBUF = D;
+  44   1        while(!TI);
+  45   1        TI = 0;   //将值发送至PC
+  46   1      }
+  47          
+  48          void MQ3_RUN()  //处理MQ3数据并显示  酒精
+  49          {
+  50   1        uchar D = 0;
+  51   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
+  52   1        if(D>40)
+  53   1        {
+  54   2          lcd1602_write_string(0,0,"WARNING         ");
+C51 COMPILER V9.56.0.0   SENSOR                                                            07/24/2018 01:07:00 PAGE 2   
+
+  55   2          lcd1602_write_string(0,1,"FROM Q3");
+  56   2          LED = 1;//LED亮
+  57   2          BUZZER = 0;//蜂鸣器响
+  58   2          Delay(100);
+  59   2          BUZZER = 1;//蜂鸣器不响
+  60   2          Delay(100);
+  61   2          BUZZER = 0;//蜂鸣器响
+  62   2          Delay(100);
+  63   2          BUZZER = 1;//蜂鸣器不响
+  64   2        }
+  65   1        else
+  66   1        {
+  67   2          LED = 0;
+  68   2          BUZZER = 1;
+  69   2          lcd1602_write_string(0,0,"THERE IS OK");
+  70   2        }
+  71   1        
+  72   1        //将值发送至PC
+  73   1        SBUF = D;
+  74   1        while(!TI);
+  75   1        TI = 0;  
+  76   1      }
+  77          
+  78          void MQ4_RUN()  //处理MQ4数据并显示  天然气
+  79          {
+  80   1        uchar D = 0;
+  81   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
+  82   1        if(D>40)
+  83   1        {
+  84   2          lcd1602_write_string(0,0,"WARNING         ");
+  85   2          lcd1602_write_string(0,1,"FROM Q3");
+  86   2          LED = 1;//LED亮
+  87   2          BUZZER = 0;//蜂鸣器响
+  88   2          Delay(100);
+  89   2          BUZZER = 1;//蜂鸣器不响
+  90   2          Delay(100);
+  91   2          BUZZER = 0;//蜂鸣器响
+  92   2          Delay(100);
+  93   2          BUZZER = 1;//蜂鸣器不响
+  94   2        }
+  95   1        else
+  96   1        {
+  97   2          LED = 0;
+  98   2          BUZZER = 1;
+  99   2          lcd1602_write_string(0,0,"THERE IS OK");
+ 100   2        }
+ 101   1        
+ 102   1        //将值发送至PC
+ 103   1        SBUF = D;
+ 104   1        while(!TI);
+ 105   1        TI = 0;  
+ 106   1      }
+ 107          
+ 108          void MQ5_RUN()  //处理MQ5数据并显示  液体
+ 109          {
+ 110   1        uchar D = 0;
+ 111   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
+ 112   1        if(D>40)
+ 113   1        {
+ 114   2          lcd1602_write_string(0,0,"WARNING         ");
+ 115   2          lcd1602_write_string(0,1,"FROM Q3");
+ 116   2          LED = 1;//LED亮
+C51 COMPILER V9.56.0.0   SENSOR                                                            07/24/2018 01:07:00 PAGE 3   
+
+ 117   2          BUZZER = 0;//蜂鸣器响
+ 118   2          Delay(100);
+ 119   2          BUZZER = 1;//蜂鸣器不响
+ 120   2          Delay(100);
+ 121   2          BUZZER = 0;//蜂鸣器响
+ 122   2          Delay(100);
+ 123   2          BUZZER = 1;//蜂鸣器不响
+ 124   2        }
+ 125   1        else
+ 126   1        {
+ 127   2          LED = 0;
+ 128   2          BUZZER = 1;
+ 129   2          lcd1602_write_string(0,0,"THERE IS OK");
+ 130   2        }
+ 131   1        
+ 132   1        //将值发送至PC
+ 133   1        SBUF = D;
+ 134   1        while(!TI);
+ 135   1        TI = 0;  
+ 136   1      }
+ 137          
+ 138          void MQ135_RUN()  //处理MQ135数据并显示 液体
+ 139          {
+ 140   1        uchar D = 0;
+ 141   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
+ 142   1        if(D>40)
+ 143   1        {
+ 144   2          lcd1602_write_string(0,0,"WARNING         ");
+ 145   2          lcd1602_write_string(0,1,"FROM Q3");
+ 146   2          LED = 1;//LED亮
+ 147   2          BUZZER = 0;//蜂鸣器响
+ 148   2          Delay(100);
+ 149   2          BUZZER = 1;//蜂鸣器不响
+ 150   2          Delay(100);
+ 151   2          BUZZER = 0;//蜂鸣器响
+ 152   2          Delay(100);
+ 153   2          BUZZER = 1;//蜂鸣器不响
+ 154   2        }
+ 155   1        else
+ 156   1        {
+ 157   2          LED = 0;
+ 158   2          BUZZER = 1;
+ 159   2          lcd1602_write_string(0,0,"THERE IS OK");
+ 160   2        }
+ 161   1        
+ 162   1        //将值发送至PC
+ 163   1        SBUF = D;
+ 164   1        while(!TI);
+ 165   1        TI = 0;  
+ 166   1      }
+ 167          
+ 168          
+ 169          void SENSOR_RUN()
+ 170          {
+ 171   1        DCMOTOR_RUN();//直流电机
+ 172   1        MQ2_RUN();    //MQ2
+ 173   1        MQ3_RUN();    //MQ3
+ 174   1        MQ4_RUN();    //MQ4
+ 175   1        MQ5_RUN();    //MQ5
+ 176   1        MQ135_RUN();  //MQ135
+ 177   1      }
+
+C51 COMPILER V9.56.0.0   SENSOR                                                            07/24/2018 01:07:00 PAGE 4   
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    527    ----
+   CONSTANT SIZE    =     59    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       5
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

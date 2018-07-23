@@ -1,0 +1,118 @@
+C51 COMPILER V9.56.0.0   IIC                                                               07/24/2018 01:06:59 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE IIC
+OBJECT MODULE PLACED IN .\Objects\IIC.obj
+COMPILER INVOKED BY: D:\Software\C51\C51\BIN\C51.EXE IIC\IIC.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\IIC;.\LCD1602;.\DELAY;.
+                    -\PCF8591;.\SENSOR) DEBUG OBJECTEXTEND PRINT(.\Listings\IIC.lst) TABS(2) OBJECT(.\Objects\IIC.obj)
+
+line level    source
+
+   1          #include "IIC.h"
+   2          #include "intrins.h"
+   3          #include "Delay.h"
+   4          
+   5          bit SDA,SCL,ack1;
+   6          
+   7          void IDefine_Bus(bit SDA_NEW,SCL_NEW)
+   8          {
+   9   1        SDA = SDA_NEW;
+  10   1        SCL = SCL_NEW;
+  11   1      }
+  12          
+  13          void Start_I2c()
+  14          {
+  15   1        SDA=1;         /*发送起始条件的数据信号*/
+  16   1        _nop_();
+  17   1        SCL=1;
+  18   1        Delay_us(5);   /*起始条件建立时间大于4.7us,延时*/
+  19   1        SDA=0;         /*发送起始信号*/
+  20   1        Delay_us(5);   /* 起始条件锁定时间大于4μs*/    
+  21   1        SCL=0;         /*钳住I2C总线，准备发送或接收数据 */
+  22   1        _nop_();
+  23   1        _nop_();
+  24   1      }
+  25          
+  26          void Stop_I2c()
+  27          {
+  28   1        SDA=0;        /*发送结束条件的数据信号*/
+  29   1        _nop_();       /*发送结束条件的时钟信号*/
+  30   1        SCL=1;      
+  31   1        Delay_us(5);  /*结束条件建立时间大于4μs*/
+  32   1        SDA=1;        /*发送I2C总线结束信号*/
+  33   1        Delay_us(4);
+  34   1      }
+  35          
+  36          void  SendByte(unsigned char  c)  //发送一个字节
+  37          {
+  38   1        uchar BitCnt;
+  39   1        for(BitCnt=0;BitCnt<8;BitCnt++)  /*要传送的数据长度为8位*/
+  40   1        {
+  41   2          if((c<<BitCnt)&0x80) SDA=1;   /*判断发送位*/
+  42   2          else SDA=0;                
+  43   2          _nop_();
+  44   2          SCL=1;               /*置时钟线为高，通知被控器开始接收数据位*/
+  45   2          Delay_us(5);         /*保证时钟高电平周期大于4μs*/        
+  46   2          SCL=0; 
+  47   2        }
+  48   1        
+  49   1        Delay_us(2);
+  50   1        SDA=1;                /*8位发送完后释放数据线，准备接收应答位*/
+  51   1        Delay_us(2);  
+  52   1        SCL=1;
+  53   1        Delay_us(3);
+  54   1      
+C51 COMPILER V9.56.0.0   IIC                                                               07/24/2018 01:06:59 PAGE 2   
+
+  55   1        if(SDA==1)ack1=0;     
+  56   1        else ack1=1;           /*判断是否接收到应答信号,全局变量*/
+  57   1        SCL=0;
+  58   1        Delay_us(2);
+  59   1      }
+  60          
+  61          uchar RcvByte()
+  62          {
+  63   1        uchar  retc;
+  64   1        uchar BitCnt;
+  65   1        retc=0; 
+  66   1        SDA=1;                     /*置数据线为输入方式*/
+  67   1        for(BitCnt=0;BitCnt<8;BitCnt++)
+  68   1        {
+  69   2          _nop_();           
+  70   2          SCL=0;                  /*置时钟线为低，准备接收数据位*/
+  71   2          Delay_us(5);            /*时钟低电平周期大于4.7μs*/
+  72   2          SCL=1;                  /*置时钟线为高使数据线上数据有效*/
+  73   2          Delay_us(2);
+  74   2          retc=retc<<1;
+  75   2          if(SDA==1)retc=retc+1;  /*读数据位,接收的数据位放入retc中 */
+  76   2          Delay_us(2);
+  77   2        }
+  78   1        SCL=0;    
+  79   1        Delay_us(2);
+  80   1        return(retc);
+  81   1      }
+  82          
+  83          void Ack_I2c(bit a)
+  84          {
+  85   1        if(a==0)SDA=0;              /*在此发出应答或非应答信号 */
+  86   1        else SDA=1;
+  87   1        Delay_us(3);     
+  88   1        SCL=1;
+  89   1        Delay_us(5);                /*时钟低电平周期大于4μs*/
+  90   1        SCL=0;                      /*清时钟线，钳住I2C总线以便继续接收*/
+  91   1        Delay_us(2);   
+  92   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    218    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       6
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3       2
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
