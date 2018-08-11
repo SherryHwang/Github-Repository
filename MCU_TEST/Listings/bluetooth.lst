@@ -1,0 +1,94 @@
+C51 COMPILER V9.56.0.0   BLUETOOTH                                                         07/31/2018 18:57:32 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE BLUETOOTH
+OBJECT MODULE PLACED IN .\Objects\bluetooth.obj
+COMPILER INVOKED BY: F:\C51\C51\BIN\C51.EXE ..\魏琴传感器\蓝牙\bluetooth.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\IIC;.\LCD16
+                    -02;.\DELAY;.\PCF8591;.\SENSOR;.\USER;.\7SEG) DEBUG OBJECTEXTEND PRINT(.\Listings\bluetooth.lst) TABS(2) OBJECT(.\Objects
+                    -\bluetooth.obj)
+
+line level    source
+
+   1          #include<reg52.h>
+   2          #include"delay.h"
+   3          #include"lcd1602.h"
+   4          #define uchar unsigned char
+   5            
+   6          sbit key = P2^0;//key接口连接P2^0口，为高电平时使hc05进入AT配置模式
+   7          sbit led1 = P1^0;//第一个led1灯接P1^0口，当单片机接收数据时作为指示灯
+   8          uchar count = 0;//记录每次发送数据的个数并将数据存入一数组中
+   9          uchar receivedata[32] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";//接收数据数组
+  10          uchar Sendending[] = " Successful!";//单片机端成功接收数据时发送一提示消息给手机端
+  11          
+  12          void Serial_Initial();//串口初始化函数
+  13          void Send_String(uchar *strdata);//单片机发送字符串
+  14          
+  15          void Serial_Proc() interrupt 4 //串口中断                      
+  16          {
+  17   1        uchar temp;
+  18   1        if(RI)
+  19   1        {
+  20   2          led1 = 1;//每接收一个字符led闪亮一次
+  21   2          temp = SBUF;
+  22   2          receivedata[count++] = temp;
+  23   2          if(temp == '#')//蓝牙端发送的数据以#作为结束标志，故单片机接收端收到最后一个字符为#号时标志完成一次数据
+             -的结束，并显示数据
+  24   2          {
+  25   3            display(receivedata);//单片机端接收到的显示到lcd1602
+*** WARNING C206 IN LINE 25 OF ..\魏琴传感器\蓝牙\bluetooth.c: 'display': missing function-prototype
+*** ERROR C267 IN LINE 25 OF ..\魏琴传感器\蓝牙\bluetooth.c: 'display': requires ANSI-style prototype
+  26   3            count = 0;
+  27   3            led1 = 0;
+  28   3            Send_String(Sendending);//单片机端接收成功向蓝牙端发送一接收成功标志
+  29   3          }
+  30   2          receivedata[32] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+  31   2        }   
+  32   1        RI = 0;
+  33   1      } 
+  34          
+  35          void main()
+  36          {
+  37   1              uchar strdata[] = "Start!";
+  38   1              Serial_Initial();//串口初始化
+  39   1              lcd1602_init();//lcd1602初始化
+  40   1              key = 1; //当该接口连接时使蓝牙进入AT模式进行蓝牙模块的配置，key为高电平时有效  
+  41   1              led1 = 0;
+  42   1              Send_String(start);
+*** ERROR C202 IN LINE 42 OF ..\魏琴传感器\蓝牙\bluetooth.c: 'start': undefined identifier
+  43   1              Send_String(start1);
+*** ERROR C202 IN LINE 43 OF ..\魏琴传感器\蓝牙\bluetooth.c: 'start1': undefined identifier
+  44   1             // Send_String(strdata); 
+  45   1              while(1);
+  46   1      }
+  47          void Serial_Initial()
+  48          {
+C51 COMPILER V9.56.0.0   BLUETOOTH                                                         07/31/2018 18:57:32 PAGE 2   
+
+  49   1              SCON=0X50;  //串口通信方式1 9600的波特率允许接收                     
+  50   1              TMOD=0X20;  //定时器T1方式2下工作                   
+  51   1              TH1=0XF3;                         
+  52   1              TL1=0XF3;
+  53   1              PCON = 0x80;
+  54   1              TR1=1;
+  55   1              ES=1;                            
+  56   1              EA=1; 
+  57   1      }
+  58          void Send_String(uchar *strdata)
+  59          {
+  60   1        while(*strdata != '\0')//查询方式发字符串
+  61   1        {
+  62   2          SBUF = *strdata;
+  63   2          while(!TI);
+  64   2          TI = 0;
+  65   2          strdata++;
+  66   2        }
+  67   1      }
+  68          void display(uchar *receivedata)//显示蓝牙端发送的数据
+  69          {
+*** ERROR C231 IN LINE 69 OF ..\魏琴传感器\蓝牙\bluetooth.c: 'display': redefinition
+  70   1        lcd1602_write_cmd(0x01);
+  71   1        lcd1602_write_string(0,receivedata);
+  72   1      }
+*** ERROR C231 IN LINE 72 OF ..\魏琴传感器\蓝牙\bluetooth.c: 'display': redefinition
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  5 ERROR(S)

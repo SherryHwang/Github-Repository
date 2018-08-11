@@ -1,10 +1,11 @@
-C51 COMPILER V9.56.0.0   LCD1602                                                           07/24/2018 01:06:59 PAGE 1   
+C51 COMPILER V9.56.0.0   LCD1602                                                           08/10/2018 20:37:17 PAGE 1   
 
 
 C51 COMPILER V9.56.0.0, COMPILATION OF MODULE LCD1602
 OBJECT MODULE PLACED IN .\Objects\LCD1602.obj
 COMPILER INVOKED BY: D:\Software\C51\C51\BIN\C51.EXE LCD1602\LCD1602.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\IIC;.\LCD1602;.
-                    -\DELAY;.\PCF8591;.\SENSOR) DEBUG OBJECTEXTEND PRINT(.\Listings\LCD1602.lst) TABS(2) OBJECT(.\Objects\LCD1602.obj)
+                    -\DELAY;.\PCF8591;.\SENSOR;.\USER;.\7SEG;.\WIFI;.\DEFINE;.\DS18B20;.\ELECTRONIC_SCALE;..\MCU_TEST;.\LATTICE;.\ADXL345;.\B
+                    -H1750) DEBUG OBJECTEXTEND PRINT(.\Listings\LCD1602.lst) TABS(2) OBJECT(.\Objects\LCD1602.obj)
 
 line level    source
 
@@ -23,9 +24,9 @@ line level    source
   13   1          lcd1602_io = cmd;
   14   1          lcd1602_rs = 0;
   15   1          lcd1602_en = 0;
-  16   1          Delay(10);
+  16   1          Delay_ms(10);
   17   1          lcd1602_en = 1;
-  18   1          Delay(10);
+  18   1          Delay_ms(10);
   19   1          lcd1602_en = 0;
   20   1      }
   21          
@@ -34,9 +35,9 @@ line level    source
   24   1          lcd1602_io = dat;
   25   1          lcd1602_rs = 1;
   26   1          lcd1602_en = 0;
-  27   1          Delay(10);
+  27   1          Delay_ms(10);
   28   1          lcd1602_en = 1;
-  29   1          Delay(10);
+  29   1          Delay_ms(10);
   30   1          lcd1602_en = 0;
   31   1      
   32   1      }
@@ -45,13 +46,13 @@ line level    source
   35          {
   36   1          lcd1602_rw = 0;
   37   1          lcd1602_write_cmd(0x38);   //显示模式设置：16×2显示，5×7点阵，8位数据接口
-  38   1          Delay(20);
+  38   1          Delay_ms(20);
   39   1          lcd1602_write_cmd(0x0e);   //显示模式设置
-  40   1          Delay(20);
+  40   1          Delay_ms(20);
   41   1          lcd1602_write_cmd(0x06);   //显示模式设置：光标右移，字符不移
-  42   1          Delay(20);
+  42   1          Delay_ms(20);
   43   1          lcd1602_write_cmd(0x01);   //清屏幕指令，将以前的显示内容清除
-  44   1          Delay(20);
+  44   1          Delay_ms(20);
   45   1      }
   46          
   47          void lcd1602_write_char(unsigned char x, unsigned char y, unsigned char dat) //坐标定位
@@ -61,9 +62,9 @@ line level    source
   51   1              address = 0x80 + x; //y=0,写第一行
   52   1          else
   53   1              address = 0xc0 + x; //y=1,写第二行
-  54   1          lcd1602_write_cmd(address);
-C51 COMPILER V9.56.0.0   LCD1602                                                           07/24/2018 01:06:59 PAGE 2   
+C51 COMPILER V9.56.0.0   LCD1602                                                           08/10/2018 20:37:17 PAGE 2   
 
+  54   1          lcd1602_write_cmd(address);
   55   1          lcd1602_write_data(dat);
   56   1      }
   57          
@@ -79,20 +80,30 @@ line level    source
   67   1          {
   68   2              lcd1602_write_data(*dat);
   69   2              dat++;
-  70   2              Delay(1);
+  70   2              Delay_ms(1);
   71   2          }
   72   1      }
+  73          
+  74          void lcd1602_display_data(uchar str[],uchar dat)
+  75          {
+*** WARNING C235 IN LINE 75 OF LCD1602\LCD1602.c: parameter 1: different types
+  76   1        lcd1602_write_cmd(0x01);
+  77   1        lcd1602_write_string(0,0,str);
+  78   1        lcd1602_write_char(0,1,'0' + dat / 100);
+  79   1        lcd1602_write_char(1,1,'0' + (dat % 100) / 10);
+  80   1        lcd1602_write_char(2,1,'0' + dat % 10);
+  81   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    195    ----
+   CODE SIZE        =    276    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =   ----       6
+   DATA SIZE        =   ----      10
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
 
 
-C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

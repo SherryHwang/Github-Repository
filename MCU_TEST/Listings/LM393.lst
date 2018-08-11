@@ -1,0 +1,111 @@
+C51 COMPILER V9.56.0.0   LM393                                                             08/07/2018 15:44:28 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE LM393
+OBJECT MODULE PLACED IN .\Objects\LM393.obj
+COMPILER INVOKED BY: D:\Software\C51\C51\BIN\C51.EXE LM393.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\IIC;.\LCD1602;.\DELAY;.\P
+                    -CF8591;.\SENSOR;.\USER;.\7SEG;.\WIFI;.\DEFINE;.\DS18B20;.\ELECTRONIC_SCALE;..\MCU_TEST;.\LATTICE;.\ADXL345) DEBUG OBJECT
+                    -EXTEND PRINT(.\Listings\LM393.lst) TABS(2) OBJECT(.\Objects\LM393.obj)
+
+line level    source
+
+   1          ///*
+   2          //效果：LCD上显示声音的AD值
+   3          //口线：M9模块AO引脚接P5模块AIN2引脚
+   4          //      P20引脚接IIC接口SCL引脚
+   5          //      P21引脚接IIC接口SDA引脚
+   6          //      P10接LED灯
+   7          //*/
+   8          //#include <reg52.h>
+   9          //#include <stdio.h>
+  10          //#include "lcd1602.h"
+  11          //#include "PCF8591.h"
+  12          //#include <I2C.H>
+  13          
+  14          //#define  PCF8591 0x90    //PCF8591 地址
+  15          //#define uchar unsigned char
+  16          //#define uint unsigned int
+  17          //  
+  18          //// 定义变量
+  19          //unsigned char  D;
+  20          //sbit LED = P1 ^ 0;      
+  21          //uchar mydata[4] = {"0000"};   //接收声音AD值
+  22          //uchar get_first;
+  23          
+  24          //void sound_init();//初始化声音传感器模块
+  25          //void sound_test();//检测声音模块
+  26          
+  27          //void main()
+  28          //{
+  29          //  uchar i = 0;
+  30          //  lcd1602_init();
+  31          //  Initial_com();
+  32          //  LED = 0;
+  33          //  lcd1602_write_string(0,0,"THERE IS OK      ");//初始化
+  34          //  
+  35          //  while(1)
+  36          //  {
+  37          //    sound_init();
+  38          //    sound_test();
+  39          //  }
+  40          //}
+  41          
+  42          //void sound_init()
+  43          //{
+  44          //  uchar i = 0;
+  45          //  for(i = 0;i<10;i++)
+  46          //    {
+  47          //      ISendByte(PCF8591,0x41);
+  48          //      get_first = IRcvByte(PCF8591);
+  49          //    }
+  50          //}
+  51          //void sound_test()
+  52          //{
+  53          //    uchar i = 0;
+C51 COMPILER V9.56.0.0   LM393                                                             08/07/2018 15:44:28 PAGE 2   
+
+  54          //    ISendByte(PCF8591,0x41);
+  55          //    D = IRcvByte(PCF8591);
+  56          //    for(i = 0;i<4;i++)
+  57          //    {
+  58          //      mydata[i] = D%10+'0';
+  59          //      D /= 10;
+  60          //    }
+  61          //    mydata[i] = '\0';
+  62          //    if(D != ~get_first ) //有噪声 LCD第二行显示噪声值 LED闪烁两次
+  63          //    {
+  64          //      lcd1602_write_string(0,0,"FROM SOUNDSENSOR");
+  65          //      lcd1602_write_string(0,1,"                ");//刷新第二行
+  66          //      lcd1602_write_string(0,1,mydata);//显示声音的值
+  67          //      Delay_ms(100);
+  68          //      
+  69          //      LED = 1;//LED亮
+  70          //      Delay_ms(100);
+  71          //      LED = 0;//LED灭
+  72          //      Delay_ms(100);
+  73          //      LED = 1;//LED亮
+  74          //      Delay_ms(100);
+  75          //      LED = 0;//LED灭
+  76          //    }
+  77          //    else //无噪声LCD第二行显示QUIET 第一行显示来自FROM SOUNDSENSOR
+  78          //    {
+  79          //      lcd1602_write_string(0,0,"FROM SOUNDSENSOR");
+  80          //      lcd1602_write_string(0,1,"QUIET");
+  81          //    }
+  82          //}
+  83          //  
+  84          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

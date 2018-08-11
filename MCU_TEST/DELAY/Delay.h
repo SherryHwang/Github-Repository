@@ -1,10 +1,8 @@
 #ifndef __DELAY_H__
 #define __DELAY_H__
-
-#define uchar unsigned char
-#define uint unsigned int
+#include"DEFINE.h"
 	
-void Delay(uint z);
+void Delay_ms(uint z);
 void Delay_us(uchar n);
 
 

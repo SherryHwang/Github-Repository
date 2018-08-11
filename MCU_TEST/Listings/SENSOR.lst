@@ -1,10 +1,11 @@
-C51 COMPILER V9.56.0.0   SENSOR                                                            07/24/2018 01:07:00 PAGE 1   
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 1   
 
 
 C51 COMPILER V9.56.0.0, COMPILATION OF MODULE SENSOR
 OBJECT MODULE PLACED IN .\Objects\SENSOR.obj
 COMPILER INVOKED BY: D:\Software\C51\C51\BIN\C51.EXE SENSOR\SENSOR.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\IIC;.\LCD1602;.\D
-                    -ELAY;.\PCF8591;.\SENSOR) DEBUG OBJECTEXTEND PRINT(.\Listings\SENSOR.lst) TABS(2) OBJECT(.\Objects\SENSOR.obj)
+                    -ELAY;.\PCF8591;.\SENSOR;.\USER;.\7SEG;.\WIFI;.\DEFINE;.\DS18B20;.\ELECTRONIC_SCALE;..\MCU_TEST;.\LATTICE;.\ADXL345;.\BH1
+                    -750) DEBUG OBJECTEXTEND PRINT(.\Listings\SENSOR.lst) TABS(2) OBJECT(.\Objects\SENSOR.obj)
 
 line level    source
 
@@ -13,192 +14,710 @@ line level    source
    3          #include "PCF8591.h"
    4          #include "LCD1602.h"
    5          #include "SENSOR.h"
-   6          
-   7          sbit LED = P1 ^ 0;            
-   8          sbit BUZZER = P1 ^ 1; 
-   9          sbit FAN = P1 ^ 2;           //风扇
-  10          sbit Dcmotor = P1 ^ 3;         //直流电机
-  11          
-  12          void DCMOTOR_RUN()           //直流电机转动
-  13          {
-  14   1        Dcmotor = 1;
-  15   1      }
+   6          #include "7SEG.h"
+   7          #include "WIFI.h"
+   8          #include "DS18B20.h"
+   9          #include "ELECTRONIC_SCALE.h"
+  10          #include "ADXL345.h"
+  11          #include "LATTICE.h"
+  12          #include "BH1750.h"
+  13          
+  14          extern uchar num;
+  15          extern uchar  a[12];       //用于存储串口发送的信息
   16          
-  17          void MQ2_RUN()  //处理MQ2数据并显示  烟雾
-  18          {
-  19   1        uchar D = 0;
-  20   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
-  21   1        if(D>60)
-  22   1        {
-  23   2          lcd1602_write_string(0,1,"WARNING         ");
-  24   2          lcd1602_write_string(0,1,"FROM Q2");
-  25   2          LED = 1;//LED亮
-  26   2          FAN=1;  //风扇转
-  27   2          
-  28   2          BUZZER = 0;//蜂鸣器响
-  29   2          Delay(100);
-  30   2          BUZZER = 1;//蜂鸣器不响
-  31   2          Delay(100);
-  32   2          BUZZER = 0;//蜂鸣器响
-  33   2          Delay(100);
-  34   2          BUZZER = 1;//蜂鸣器不响   
+  17          extern uchar D;  //引用主函数
+  18          extern uint d;   //引用DS18B20
+  19          
+  20          extern unsigned long first;
+  21          extern bit flag;             //检测距离是否溢出标志
+  22          extern bit timer_start;
+  23          extern bit bluetooth;
+  24          extern bit refresh;
+  25          extern uchar BUF[8];                         //接收数据缓存区   
+  26          uchar MotorStep = 0;
+  27          void SendChar_PC(uchar sd)
+  28          {
+  29   1        lcd1602_write_string(0,0,"PC DISPLAY      ");
+  30   1        if(!((a[0]>>1)%2)) //通过串口发送
+  31   1        {
+  32   2          SBUF = sd;    //发送检测数据
+  33   2          while(!TI);
+  34   2          TI = 0; 
   35   2        }
   36   1        else
   37   1        {
-  38   2          FAN=0;     //风扇不转
-  39   2          LED = 0;   //LED灯不亮
-  40   2          BUZZER = 1; //蜂鸣器不响
-  41   2          lcd1602_write_string(0,1,"THERE IS SAFE");
-  42   2        }
-  43   1        SBUF = D;
-  44   1        while(!TI);
-  45   1        TI = 0;   //将值发送至PC
-  46   1      }
-  47          
-  48          void MQ3_RUN()  //处理MQ3数据并显示  酒精
-  49          {
-  50   1        uchar D = 0;
-  51   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
-  52   1        if(D>40)
-  53   1        {
-  54   2          lcd1602_write_string(0,0,"WARNING         ");
-C51 COMPILER V9.56.0.0   SENSOR                                                            07/24/2018 01:07:00 PAGE 2   
+  38   2          Wifi_Send_Char(sd);
+  39   2        }
+  40   1      }
+  41          void SendInt_PC(uint sd)
+  42          {
+  43   1        lcd1602_write_string(0,0,"PC DISPLAY      ");
+  44   1        if(!((a[0]>>1)%2)) //通过串口发送
+  45   1        {
+  46   2          SBUF = sd>>8;    //发送高八位
+  47   2          while(!TI);
+  48   2          TI = 0; 
+  49   2          SBUF = sd & 0X00FF; //发送低八位
+  50   2          while(!TI);
+  51   2          TI = 0; 
+  52   2        }
+  53   1        else
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 2   
 
-  55   2          lcd1602_write_string(0,1,"FROM Q3");
-  56   2          LED = 1;//LED亮
-  57   2          BUZZER = 0;//蜂鸣器响
-  58   2          Delay(100);
-  59   2          BUZZER = 1;//蜂鸣器不响
-  60   2          Delay(100);
-  61   2          BUZZER = 0;//蜂鸣器响
-  62   2          Delay(100);
-  63   2          BUZZER = 1;//蜂鸣器不响
-  64   2        }
-  65   1        else
-  66   1        {
-  67   2          LED = 0;
-  68   2          BUZZER = 1;
-  69   2          lcd1602_write_string(0,0,"THERE IS OK");
+  54   1        {
+  55   2          Wifi_Send_Int(sd);
+  56   2        }
+  57   1      }
+  58          void SendString_PC(uchar sd[])
+  59          {
+  60   1        lcd1602_write_string(0,0,"PC DISPLAY      ");
+  61   1        if(!((a[0]>>1)%2)) //通过串口发送
+  62   1        {
+  63   2          uchar i;
+  64   2          for(i = 0;sd[i] != '\0';i++)   //将数据字符串通过串口发送出去
+  65   2          {
+  66   3            SBUF = sd[i];    //发送检测数据
+  67   3            while(!TI);
+  68   3            TI = 0; 
+  69   3          }
   70   2        }
-  71   1        
-  72   1        //将值发送至PC
-  73   1        SBUF = D;
-  74   1        while(!TI);
-  75   1        TI = 0;  
-  76   1      }
-  77          
-  78          void MQ4_RUN()  //处理MQ4数据并显示  天然气
-  79          {
-  80   1        uchar D = 0;
-  81   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
-  82   1        if(D>40)
-  83   1        {
-  84   2          lcd1602_write_string(0,0,"WARNING         ");
-  85   2          lcd1602_write_string(0,1,"FROM Q3");
-  86   2          LED = 1;//LED亮
-  87   2          BUZZER = 0;//蜂鸣器响
-  88   2          Delay(100);
-  89   2          BUZZER = 1;//蜂鸣器不响
-  90   2          Delay(100);
-  91   2          BUZZER = 0;//蜂鸣器响
-  92   2          Delay(100);
-  93   2          BUZZER = 1;//蜂鸣器不响
-  94   2        }
-  95   1        else
-  96   1        {
-  97   2          LED = 0;
-  98   2          BUZZER = 1;
-  99   2          lcd1602_write_string(0,0,"THERE IS OK");
- 100   2        }
- 101   1        
- 102   1        //将值发送至PC
- 103   1        SBUF = D;
- 104   1        while(!TI);
- 105   1        TI = 0;  
- 106   1      }
- 107          
- 108          void MQ5_RUN()  //处理MQ5数据并显示  液体
+  71   1        else
+  72   1        {
+  73   2          Wifi_Send_String(sd);         //将数据字符串通过wifi发送出去
+  74   2        }
+  75   1      }
+  76          void SendLong_PC(unsigned long sd)
+  77          {
+  78   1        lcd1602_write_string(0,0,"PC DISPLAY      ");
+  79   1        if(!((a[0]>>1)%2)) //通过串口发送
+  80   1        {
+  81   2          SBUF = sd>>24;    //发送检测数据
+  82   2          while(!TI);
+  83   2          TI = 0; 
+  84   2          SBUF = sd>>16;    //发送检测数据
+  85   2          while(!TI);
+  86   2          TI = 0; 
+  87   2          SBUF = sd>>8;    //发送检测数据
+  88   2          while(!TI);
+  89   2          TI = 0; 
+  90   2          SBUF = sd & 0X000000FF;    //发送检测数据
+  91   2          while(!TI);
+  92   2          TI = 0; 
+  93   2        }
+  94   1        else
+  95   1        {
+  96   2          Wifi_Send_Long(sd);         //将数据字符串通过wifi发送出去
+  97   2        }
+  98   1      }
+  99          void _7SEG_LED()                  //1.七段数码管
+ 100          {
+ 101   1        Display_NUM(a[a[1]+2]*100 + a[a[1]+3]); //显示数据
+ 102   1      }
+ 103          void LED_RUN()                    //2.LED
+ 104          {
+ 105   1        P1 = a[a[1]+2];       //可选参数第一个控制LED1灯亮
+ 106   1        SBUF = a[a[1]+2];
+ 107   1      }
+ 108          void LATTICE_RUN()                //3.点阵
  109          {
- 110   1        uchar D = 0;
- 111   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
- 112   1        if(D>40)
- 113   1        {
- 114   2          lcd1602_write_string(0,0,"WARNING         ");
- 115   2          lcd1602_write_string(0,1,"FROM Q3");
- 116   2          LED = 1;//LED亮
-C51 COMPILER V9.56.0.0   SENSOR                                                            07/24/2018 01:07:00 PAGE 3   
+ 110   1        Lattice_Show(a[a[1]+2]);  //显示可选参数第一个数据
+ 111   1      }
+ 112          void STATIC_DIGITAL_RUN()         //4.静态数码管
+ 113          {
+ 114   1        Display_NUM((a[a[1]+2]*100)<<8 + a[a[1]+3]);
+ 115   1      }
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 3   
 
- 117   2          BUZZER = 0;//蜂鸣器响
- 118   2          Delay(100);
- 119   2          BUZZER = 1;//蜂鸣器不响
- 120   2          Delay(100);
- 121   2          BUZZER = 0;//蜂鸣器响
- 122   2          Delay(100);
- 123   2          BUZZER = 1;//蜂鸣器不响
- 124   2        }
- 125   1        else
- 126   1        {
- 127   2          LED = 0;
- 128   2          BUZZER = 1;
- 129   2          lcd1602_write_string(0,0,"THERE IS OK");
- 130   2        }
- 131   1        
- 132   1        //将值发送至PC
- 133   1        SBUF = D;
- 134   1        while(!TI);
- 135   1        TI = 0;  
- 136   1      }
- 137          
- 138          void MQ135_RUN()  //处理MQ135数据并显示 液体
- 139          {
- 140   1        uchar D = 0;
- 141   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
- 142   1        if(D>40)
- 143   1        {
- 144   2          lcd1602_write_string(0,0,"WARNING         ");
- 145   2          lcd1602_write_string(0,1,"FROM Q3");
- 146   2          LED = 1;//LED亮
- 147   2          BUZZER = 0;//蜂鸣器响
- 148   2          Delay(100);
- 149   2          BUZZER = 1;//蜂鸣器不响
- 150   2          Delay(100);
- 151   2          BUZZER = 0;//蜂鸣器响
- 152   2          Delay(100);
- 153   2          BUZZER = 1;//蜂鸣器不响
- 154   2        }
- 155   1        else
- 156   1        {
- 157   2          LED = 0;
- 158   2          BUZZER = 1;
- 159   2          lcd1602_write_string(0,0,"THERE IS OK");
- 160   2        }
- 161   1        
- 162   1        //将值发送至PC
- 163   1        SBUF = D;
- 164   1        while(!TI);
- 165   1        TI = 0;  
- 166   1      }
- 167          
- 168          
- 169          void SENSOR_RUN()
- 170          {
- 171   1        DCMOTOR_RUN();//直流电机
- 172   1        MQ2_RUN();    //MQ2
- 173   1        MQ3_RUN();    //MQ3
- 174   1        MQ4_RUN();    //MQ4
- 175   1        MQ5_RUN();    //MQ5
- 176   1        MQ135_RUN();  //MQ135
- 177   1      }
+ 116          void BUZZER_RUN()                 //5.蜂鸣器
+ 117          {
+ 118   1        BUZZER = 0;
+ 119   1        Delay_ms(10);
+ 120   1        BUZZER = 1;
+ 121   1      }
+ 122          void DCMOTOR_RUN()                //6.直流电机
+ 123          {
+ 124   1        DCMOTOR = 1;
+ 125   1        Delay_ms(10);
+ 126   1        DCMOTOR = 0;
+ 127   1      }
+ 128          void STEPMOTOR_RUN()              //7.步进电机
+ 129          {
+ 130   1        Delay_us(90);
+ 131   1        switch(MotorStep)
+ 132   1        {
+ 133   2          case 0:         
+ 134   2            A = 0;        //0xf1  
+ 135   2            b = 1;
+ 136   2            C = 1;
+ 137   2            DD = 1;
+ 138   2            MotorStep = 1;
+ 139   2            break;
+ 140   2          case 1:    // AB
+ 141   2            A = 0;       //0xf3 
+ 142   2            b = 0;
+ 143   2            C = 1;
+ 144   2            DD = 1;
+ 145   2            MotorStep = 2;
+ 146   2            break;
+ 147   2          case 2:    //B
+ 148   2            A = 1;
+ 149   2            b = 0;      //0xf2 
+ 150   2            C = 1;
+ 151   2            DD = 1;
+ 152   2            MotorStep = 3;
+ 153   2            break;
+ 154   2          case 3:   //BC
+ 155   2            A = 1;
+ 156   2            b = 0;        //0xf6
+ 157   2            C = 0;
+ 158   2            DD = 1;
+ 159   2            MotorStep = 4;
+ 160   2            break;
+ 161   2          case 4:    //C
+ 162   2            A = 1;
+ 163   2            b = 1;        //0xf4
+ 164   2            C = 0;
+ 165   2            DD = 1;
+ 166   2            MotorStep = 5;
+ 167   2            break;
+ 168   2          case 5:       //CD
+ 169   2            A = 1;
+ 170   2            b = 1;        //0xfc
+ 171   2            C = 0;
+ 172   2            DD = 0;
+ 173   2            MotorStep = 6;
+ 174   2            break;
+ 175   2          case 6:       //D
+ 176   2            A = 1;
+ 177   2            b = 1;        //0xf8
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 4   
 
-C51 COMPILER V9.56.0.0   SENSOR                                                            07/24/2018 01:07:00 PAGE 4   
+ 178   2            C = 1;
+ 179   2            DD = 0;
+ 180   2            MotorStep = 7;
+ 181   2            break;
+ 182   2          case 7:     //DA
+ 183   2            A = 0;
+ 184   2            b = 1;        //0xf9
+ 185   2            C = 1;
+ 186   2            DD = 0;
+ 187   2            MotorStep = 0;
+ 188   2            break;
+ 189   2        }
+ 190   1      }
+ 191          void FAN_RUN()                    //8.风扇
+ 192          {
+ 193   1        FAN = 1;
+ 194   1        Delay_ms(10);
+ 195   1        FAN = 0;
+ 196   1      }
+ 197          void DS18B20_RUN()                //9.温度传感器
+ 198          {
+ 199   1        //刷新LCD
+ 200   1        if(refresh)  //刷新
+ 201   1        {
+ 202   2          refresh = 0;
+ 203   2          lcd1602_write_cmd(0x01);    
+ 204   2          if(!(a[0]%2))  //MCU显示
+ 205   2            lcd1602_write_string(0,0,"Temperature:");
+ 206   2          else
+ 207   2            lcd1602_write_string(0,0,"PC DISPLAY");
+ 208   2        }
+ 209   1        ds_change();
+ 210   1        d = get_temperature();
+ 211   1        if(!(a[0]%2))     //MCU端显示
+ 212   1        {
+ 213   2          Display_Temperature(d);
+ 214   2          if(d>350)
+ 215   2            BUZZER = 0;
+ 216   2          else
+ 217   2            BUZZER = 1;
+ 218   2        }
+ 219   1        else
+ 220   1        {
+ 221   2          //lcd1602_write_string(0,0,"PC DISPLAY");
+ 222   2          SendInt_PC(d);
+ 223   2        }
+ 224   1      }
+ 225          
+ 226          
+ 227          void ULTRASONIC_RUN()             //10.超声波
+ 228          {
+ 229   1        //刷新LCD
+ 230   1        if(refresh)  //刷新
+ 231   1        {
+ 232   2          refresh = 0;
+ 233   2          lcd1602_write_cmd(0x01);
+ 234   2          if(!(a[0]%2))  //MCU显示
+ 235   2            lcd1602_write_string(0,0,"Distance:");
+ 236   2          else
+ 237   2            lcd1602_write_string(0,0,"PC DISPLAY");
+ 238   2        }
+ 239   1        trig  = 0;   
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 5   
+
+ 240   1        //发出触发信号，开始检测距离
+ 241   1        trig = 1;
+ 242   1        Delay_ms(20);//给最少10us的高电平
+ 243   1        trig = 0;
+ 244   1        echo = 0;
+ 245   1        while(!echo);//echo为高电平时开始接收到超声波返回信号，启动定时T0
+ 246   1        flag = 0;//测距是否溢出标志
+ 247   1        ET0 = TR0 = 1; //打开定时器0和定时器中断
+ 248   1        while(echo);//echo为低电平时停止计数，如果T1发生中断，则无法检测到距离
+ 249   1        ET0 = TR0 = 0;  //关掉定时器0和定时器中断
+ 250   1        
+ 251   1        if(flag == 0)//检测出有距离
+ 252   1        {
+ 253   2          d = ( (256 * TH0 + TL0) * 172) / 10000 + 2;
+ 254   2        }
+ 255   1        if(!(a[0]%2))     //MCU端显示
+ 256   1        {
+ 257   2          lcd1602_write_char(1,1,'0' + d / 100);
+ 258   2          lcd1602_write_char(2,1,'0' + (d % 100) / 10);
+ 259   2          lcd1602_write_char(3,1,'0' + d % 10);
+ 260   2        }
+ 261   1        else
+ 262   1        {
+ 263   2          SendInt_PC(d);
+ 264   2        } 
+ 265   1      }
+ 266          
+ 267          
+ 268          
+ 269          void AD_SENSOR_RUN()              //11.热敏、光敏、震动、湿敏电阻共用的代码模块  将测出的数值显示在LCD上
+ 270          {
+ 271   1        //刷新LCD
+ 272   1        if(refresh)  //刷新
+ 273   1        {
+ 274   2          refresh = 0;
+ 275   2          lcd1602_write_cmd(0x01);
+ 276   2        
+ 277   2          //选择通道
+ 278   2          switch(num)
+ 279   2          {
+ 280   3            case 23:
+ 281   3              ISendByte(PCF8591,0x40);  //AIN1
+ 282   3              if(!(a[0]%2))  //MCU显示
+ 283   3                lcd1602_write_string(0,0,"light:");  //光敏
+ 284   3              else
+ 285   3                lcd1602_write_string(0,0,"PC DISPLAY");
+ 286   3              break;
+ 287   3            case 24:
+ 288   3              ISendByte(PCF8591,0x41);  //AIN2
+ 289   3              if(!(a[0]%2))  //MCU显示
+ 290   3                lcd1602_write_string(0,0,"Humidity:");//湿度
+ 291   3              else
+ 292   3                lcd1602_write_string(0,0,"PC DISPLAY");
+ 293   3              break;
+ 294   3            case 25:
+ 295   3              ISendByte(PCF8591,0x42);  //AIN3
+ 296   3              if(!(a[0]%2))  //MCU显示
+ 297   3                lcd1602_write_string(0,0,"Heat:");     //热敏
+ 298   3              else
+ 299   3                lcd1602_write_string(0,0,"PC DISPLAY");
+ 300   3              break;
+ 301   3            case 26:
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 6   
+
+ 302   3              ISendByte(PCF8591,0x43);  //AIN4
+ 303   3              if(!(a[0]%2))  //MCU显示
+ 304   3                lcd1602_write_string(0,0,"Vibration:");//振动
+ 305   3              else
+ 306   3                lcd1602_write_string(0,0,"PC DISPLAY");
+ 307   3              break;
+ 308   3            }
+ 309   2        }
+ 310   1        D=IRcvByte(PCF8591);
+ 311   1        if(!(a[0]%2))     //MCU端显示
+ 312   1        {
+ 313   2          //刷新LCD
+ 314   2          
+ 315   2          //lcd1602_write_string(0,0,"The TEMP is: ");//初始化
+ 316   2          lcd1602_write_char(7,1,D/100+'0');//将十位显示在第二行第7列
+ 317   2          lcd1602_write_char(8,1,D%100/10+'0');//将各位显示在第二行第9列
+ 318   2          lcd1602_write_char(9,1,D%10+'0');//将各位显示在第二行第8列
+ 319   2        }
+ 320   1        else
+ 321   1        {
+ 322   2          //lcd1602_write_string(0,0,"PC DISPLAY");
+ 323   2          SendChar_PC(D);
+ 324   2        }
+ 325   1      }
+ 326          
+ 327          void DIGITAL_LIGHT_INTENSITY_RUN()//12.数字光强
+ 328          {
+ 329   1        //刷新LCD
+ 330   1        if(refresh)  //刷新
+ 331   1        {
+ 332   2          refresh = 0;
+ 333   2          lcd1602_write_cmd(0x01);
+ 334   2          if(!(a[0]%2))  //MCU显示
+ 335   2            lcd1602_write_string(0,0,"Light intensity:");
+ 336   2          else
+ 337   2            lcd1602_write_string(0,0,"PC DISPLAY");
+ 338   2        }
+ 339   1        BH1750_Init();                  //初始化BH1750
+ 340   1        BH1750_Read_Multiple();
+ 341   1        if(!(a[0]%2))     //MCU端显示
+ 342   1        {
+ 343   2          BH1750_Display();
+ 344   2        }
+ 345   1        else
+ 346   1        {
+ 347   2          //lcd1602_write_string(0,0,"PC DISPLAY");
+ 348   2          SendString_PC(BUF);
+ 349   2        }
+ 350   1      }
+ 351          void BLUETOOTH_RUN()              //13.蓝牙
+ 352          {
+ 353   1        bluetooth = 1; //蓝牙模块接收数据
+ 354   1      }
+ 355          
+ 356          void INFRARED_REC_RUN()           //14.红外接收
+ 357          {  
+ 358   1        EX0 = 1; //开启外部中断0
+ 359   1      }
+ 360          void IR_IN() interrupt 0 using 0  //14.红外接收器中断
+ 361          {
+ 362   1        uchar j,k,N=0;
+ 363   1        //刷新LCD
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 7   
+
+ 364   1        if(refresh)  //刷新
+ 365   1        {
+ 366   2          refresh = 0;
+ 367   2          lcd1602_write_cmd(0x01);
+ 368   2          if(!(a[0]%2))  //MCU显示
+ 369   2            lcd1602_write_string(0,0,"Infrared receive:");
+ 370   2          else
+ 371   2            lcd1602_write_string(0,0,"PC DISPLAY");
+ 372   2        }
+ 373   1        
+ 374   1        EX0 = 0;    //关掉外部中断0
+ 375   1        Delay_us(200);
+ 376   1        if(IRIN==1) //没有红外发射信号
+ 377   1        { 
+ 378   2          //EX0 =1;
+ 379   2          return;
+ 380   2        }     
+ 381   1         
+ 382   1         //确认IR信号出现
+ 383   1        while(!IRIN)            //等IR变为高电平，跳过9ms的前导低电平信号。
+ 384   1        {
+ 385   2          Delay_us(13);
+ 386   2        }
+ 387   1      
+ 388   1        for (j=0;j<4;j++)         //收集四组数据 第三组和第四组互为反码 
+ 389   1        { 
+ 390   2          for (k=0;k<8;k++)        //每组数据有8位
+ 391   2          {
+ 392   3            while(IRIN)            //等 IR 变为低电平，跳过4.5ms的前导高电平信号。
+ 393   3              Delay_us(13);
+ 394   3            
+ 395   3            while(!IRIN)          //等 IR 变为高电平
+ 396   3              Delay_us(13);
+ 397   3            
+ 398   3            while(IRIN)           //计算IR高电平时长 
+ 399   3            {
+ 400   4              Delay_us(13);
+ 401   4              N++;           
+ 402   4              if(N>=30)             //0.14ms计数过长自动离开。
+ 403   4              {    
+ 404   5                //EX0=1;
+ 405   5                return;
+ 406   5              }                 
+ 407   4            }                          //高电平计数完毕                
+ 408   3            BUF[j]=BUF[j] >> 1;                  //数据最高位补“0”
+ 409   3            if (N>=8) {BUF[j] = BUF[j] | 0x80;}  //数据最高位补“1”
+ 410   3            N=0;
+ 411   3          }//end for k
+ 412   2        }//end for j
+ 413   1         
+ 414   1        if(BUF[2]!=~BUF[3])   //解码失败
+ 415   1        { 
+ 416   2          //EX0=1;
+ 417   2          return;
+ 418   2        }
+ 419   1      
+ 420   1        BUF[5]=BUF[2] & 0x0F;     //取键码的低四位
+ 421   1        BUF[6]=BUF[2] >> 4;       //右移4次，高四位变为低四位
+ 422   1      
+ 423   1        if(BUF[5]>9)
+ 424   1          BUF[5]=BUF[5]+0x37;
+ 425   1        else
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 8   
+
+ 426   1          BUF[5]=BUF[5]+0x30;
+ 427   1      
+ 428   1        if(BUF[6]>9)
+ 429   1          BUF[6]=BUF[6]+0x37;
+ 430   1        else
+ 431   1          BUF[6]=BUF[6]+0x30;
+ 432   1        BUF[7] = '\0';    //字符串结尾
+ 433   1        if(!(a[0]%2))     //MCU端显示
+ 434   1        {
+ 435   2          lcd1602_write_char(2,0,BUF[6]);        //第一位数显示         
+ 436   2          lcd1602_write_char(3,0,BUF[5]);        //第二位数显示
+ 437   2        }
+ 438   1        else
+ 439   1        {
+ 440   2          //lcd1602_write_string(0,0,"PC DISPLAY");
+ 441   2          SendString_PC(BUF); //PC端显示
+ 442   2        }
+ 443   1      } 
+ 444          
+ 445          void ADXL345_RUN()                //15.三轴加速度
+ 446          {
+ 447   1        //刷新LCD
+ 448   1        if(refresh)  //刷新
+ 449   1        {
+ 450   2          refresh = 0;
+ 451   2          lcd1602_write_cmd(0x01);
+ 452   2          if(!(a[0]%2))  //MCU显示
+ 453   2            lcd1602_write_string(0,0,"ADXL345 ");
+ 454   2          else
+ 455   2            lcd1602_write_string(0,0,"PC DISPLAY");
+ 456   2        }
+ 457   1        ADXL345_Init();                 //初始化ADXL345
+ 458   1        ADXL345_Read_Multiple();        //连续读出数据，存储在BUF中
+ 459   1        if(!(a[0]%2))     //MCU端显示
+ 460   1        {
+ 461   2          ADXL345_Display_xyz();          //显示ADXL345测量数据
+ 462   2        }
+ 463   1        else
+ 464   1        {
+ 465   2          //lcd1602_write_string(0,0,"PC DISPLAY");
+ 466   2          SendString_PC(BUF);
+ 467   2        }
+ 468   1      }
+ 469          void ELECTRONIC_SCALE_RUN()       //16.电子称
+ 470          {
+ 471   1        unsigned long ed;
+ 472   1        unsigned long cd;
+ 473   1        //刷新LCD
+ 474   1        if(refresh)  //刷新
+ 475   1        {
+ 476   2          refresh = 0;
+ 477   2          lcd1602_write_cmd(0x01);
+ 478   2          if(!(a[0]%2))  //MCU显示
+ 479   2            lcd1602_write_string(0,0,"Weight:");
+ 480   2          else
+ 481   2            lcd1602_write_string(0,0,"PC DISPLAY");
+ 482   2        }
+ 483   1        ed = ElectronicScalse_ReadCount();
+ 484   1        cd = ed;
+ 485   1        ed /= 100;
+ 486   1        cd = ed/7.16+0.05;
+ 487   1        cd -= first; 
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 9   
+
+ 488   1        //cd -= 11864;
+ 489   1      //  unsigned long ed;
+ 490   1      //  unsigned long cd;
+ 491   1      //  ed = ElectronicScalse_ReadCount();
+ 492   1      //  cd = ed;
+ 493   1      //  ed /= 100;
+ 494   1      //  cd = ed/7.16+0.05;
+ 495   1      //  cd -= first;
+ 496   1      //  Display_NUM(cd);
+ 497   1      //  Display_NUM(cd);
+ 498   1      //  Display_NUM(cd);
+ 499   1      //  Display_NUM(cd);
+ 500   1      //  Display_NUM(cd);
+ 501   1      //  Display_NUM(cd);
+ 502   1      //  Display_NUM(cd);
+ 503   1      //  Display_NUM(cd);
+ 504   1        
+ 505   1        if(!(a[0]%2))     //MCU端显示
+ 506   1        {
+ 507   2          cd = cd%100000;
+ 508   2          lcd1602_write_char(0,1,cd/10000 + '0'); //显示数据 wan
+ 509   2          cd = cd%10000;
+ 510   2          lcd1602_write_char(1,1,cd/1000 + '0');  //qian
+ 511   2          cd = cd%1000; 
+ 512   2          lcd1602_write_char(2,1,cd/100 + '0');   //bai
+ 513   2          cd = cd%100;
+ 514   2          lcd1602_write_char(3,1,cd/10 + '0');   //shi
+ 515   2          lcd1602_write_char(4,1,cd%10 + '0');    //ge
+ 516   2        }
+ 517   1        else
+ 518   1        {
+ 519   2          //lcd1602_write_string(0,0,"PC DISPLAY");
+ 520   2          SendLong_PC(cd);
+ 521   2        }
+ 522   1      }
+ 523          
+ 524          void MQ_RUN()                     //17 18 19 20 21 气体、烟雾传感器
+ 525          {
+ 526   1        //刷新LCD
+ 527   1        if(refresh)  //刷新
+ 528   1        {
+ 529   2          refresh = 0;
+ 530   2          lcd1602_write_cmd(0x01);
+ 531   2          //选择通道
+ 532   2          switch(num)
+ 533   2          {
+ 534   3            case 17:
+ 535   3              //ISendByte(PCF8591,0x40);  //AIN1
+ 536   3              if(!(a[0]%2))  //MCU显示
+ 537   3                lcd1602_write_string(0,0,"**MQ2   ");
+ 538   3              else
+ 539   3                lcd1602_write_string(0,0,"PC DISPLAY");
+ 540   3              break;
+ 541   3            case 18:
+ 542   3              //ISendByte(PCF8591,0x41); //AIN2
+ 543   3              if(!(a[0]%2))  //MCU显示
+ 544   3                lcd1602_write_string(0,0,"**MQ3   ");
+ 545   3              else
+ 546   3                lcd1602_write_string(0,0,"PC DISPLAY");
+ 547   3              break;
+ 548   3            case 19:
+ 549   3              //ISendByte(PCF8591,0x42); //AIN3
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 10  
+
+ 550   3              if(!(a[0]%2))  //MCU显示
+ 551   3                lcd1602_write_string(0,0,"**MQ4   ");
+ 552   3              else
+ 553   3                lcd1602_write_string(0,0,"PC DISPLAY");
+ 554   3              break;
+ 555   3            case 20:
+ 556   3              //ISendByte(PCF8591,0x43); //AIN4
+ 557   3              if(!(a[0]%2))  //MCU显示
+ 558   3                lcd1602_write_string(0,0,"**MQ5   ");
+ 559   3              else
+ 560   3                lcd1602_write_string(0,0,"PC DISPLAY");
+ 561   3              break;
+ 562   3            case 21:
+ 563   3              //ISendByte(PCF8591,0x40);  //AIN1
+ 564   3              if(!(a[0]%2))  //MCU显示
+ 565   3                lcd1602_write_string(0,0,"**MQ135   ");
+ 566   3              else
+ 567   3                lcd1602_write_string(0,0,"PC DISPLAY");
+ 568   3              break;
+ 569   3          }
+ 570   2        }
+ 571   1        switch(num)
+ 572   1        {
+ 573   2          case 17:
+ 574   2            ISendByte(PCF8591,0x40);  //AIN1
+ 575   2            break;
+ 576   2          case 18:
+ 577   2            ISendByte(PCF8591,0x41); //AIN2
+ 578   2            break;
+ 579   2          case 19:
+ 580   2            ISendByte(PCF8591,0x42); //AIN3
+ 581   2            break;
+ 582   2          case 20:
+ 583   2            ISendByte(PCF8591,0x43); //AIN4
+ 584   2            break;
+ 585   2          case 21:
+ 586   2            ISendByte(PCF8591,0x40);  //AIN1
+ 587   2            break;
+ 588   2        }
+ 589   1        D=IRcvByte(PCF8591);  //读取模拟转换数据
+ 590   1        if(!(a[0]%2))     //MCU端显示
+ 591   1        { 
+ 592   2          BUF[0]=D/100+'0';
+ 593   2          BUF[1]=(D%100)/10+'0';
+ 594   2          BUF[2]=D%10+'0';
+ 595   2          BUF[3] = '\0';
+ 596   2          lcd1602_write_string(8,0,"DATA:");
+ 597   2          lcd1602_write_string(13,0,BUF);
+ 598   2          
+ 599   2          if(D>40)
+ 600   2          {
+ 601   3            lcd1602_write_string(0,1,"WARNING         ");
+ 602   3            LED = 1;   //LED亮
+ 603   3            BUZZER = 0;//蜂鸣器响
+ 604   3          }
+ 605   2          else
+ 606   2          {
+ 607   3            lcd1602_write_string(0,1,"        ");
+ 608   3            LED = 0;
+ 609   3            BUZZER = 1;
+ 610   3          }
+ 611   2        }
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 11  
+
+ 612   1        else           //PC端显示
+ 613   1        {
+ 614   2          //cd1602_write_string(0,0,"PC DISPLAY");
+ 615   2          SendChar_PC(D); //数据发至PC端
+ 616   2        }
+ 617   1      }
+ 618          
+ 619          void HC_HR501_RUN()               //22.人体红外
+ 620          {
+ 621   1        Delay_ms(10);
+ 622   1        if(hc_hr501 == 0)  //有人
+ 623   1        {
+ 624   2          hc_hr501 = 1;
+ 625   2          BUZZER = 0;  //蜂鸣器响
+ 626   2          Delay_ms(20);
+ 627   2          BUZZER = 1;
+ 628   2          Delay_ms(20);
+ 629   2        }
+ 630   1        else
+ 631   1        {
+ 632   2          BUZZER = 1;
+ 633   2        }
+ 634   1      }
+ 635          
+ 636          void LM393_RUN()                  //23.声音传感器
+ 637          {
+ 638   1        uchar i,get_first;
+ 639   1        //刷新LCD
+ 640   1        if(refresh)  //刷新
+ 641   1        {
+ 642   2          refresh = 0;
+ 643   2          lcd1602_write_cmd(0x01);
+ 644   2          if(!(a[0]%2))  //MCU显示
+ 645   2            lcd1602_write_string(0,0,"Voice:");
+ 646   2          else
+ 647   2            lcd1602_write_string(0,0,"PC DISPLAY");
+ 648   2        }
+ 649   1        for(i = 0;i<10;i++)   //声音传感器初始化
+ 650   1        {
+ 651   2          ISendByte(PCF8591,0x41);  //AIN1
+ 652   2          get_first = IRcvByte(PCF8591);
+ 653   2        }
+ 654   1        D = IRcvByte(PCF8591);
+ 655   1        for(i = 0;i<4;i++)
+ 656   1        {
+ 657   2          BUF[i] = D%10+'0';
+ 658   2          D /= 10;
+ 659   2        }
+ 660   1        if(!(a[0]%2))     //MCU端显示
+ 661   1        {
+ 662   2          
+ 663   2          if(D != ~get_first)
+ 664   2          { 
+ 665   3            lcd1602_write_string(6,0,BUF);//显示声音的值
+ 666   3          }
+ 667   2          else
+ 668   2          {
+ 669   3            lcd1602_write_string(0,0,"QUIET     ");
+ 670   3          }
+ 671   2        }
+ 672   1        else           //PC端显示
+ 673   1        {
+C51 COMPILER V9.56.0.0   SENSOR                                                            08/10/2018 20:37:18 PAGE 12  
+
+ 674   2          //lcd1602_write_string(0,0,"PC DISPLAY");
+ 675   2          SendChar_PC(D); //数据发至PC端
+ 676   2        }
+ 677   1      }
+ 678          
+ 679          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    527    ----
-   CONSTANT SIZE    =     59    ----
+   CODE SIZE        =   2261    ----
+   CONSTANT SIZE    =    234    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =   ----       5
+   DATA SIZE        =      1      24
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.

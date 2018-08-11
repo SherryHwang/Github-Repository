@@ -1,0 +1,1 @@
+"..\ÎºÇÙ´«¸ÐÆ÷\À¶ÑÀ\bluetooth.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(.\IIC;.\LCD1602;.\DELAY;.\PCF8591;.\SENSOR;.\USER;.\7SEG) DEBUG OBJECTEXTEND PRINT(.\Listings\bluetooth.lst) TABS (2) OBJECT(.\Objects\bluetooth.obj)

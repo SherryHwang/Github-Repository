@@ -311,7 +311,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\IIC;.\LCD1602;.\DELAY;.\PCF8591;.\SENSOR</IncludePath>
+              <IncludePath>.\IIC;.\LCD1602;.\DELAY;.\PCF8591;.\SENSOR;.\USER;.\7SEG;.\WIFI;.\DEFINE;.\DS18B20;.\ELECTRONIC_SCALE;..\MCU_TEST;.\LATTICE;.\ADXL345;.\BH1750</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -387,6 +387,41 @@
               <FileName>Delay.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\DELAY\Delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>7SEG.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\7SEG\7SEG.c</FilePath>
+            </File>
+            <File>
+              <FileName>WIFI.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\WIFI\WIFI.c</FilePath>
+            </File>
+            <File>
+              <FileName>DS18B20.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\DS18B20\DS18B20.c</FilePath>
+            </File>
+            <File>
+              <FileName>ELECTRONIC_SCALE.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ELECTRONIC_SCALE\ELECTRONIC_SCALE.c</FilePath>
+            </File>
+            <File>
+              <FileName>ADXL345.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ADXL345\ADXL345.c</FilePath>
+            </File>
+            <File>
+              <FileName>LATTICE.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LATTICE\LATTICE.c</FilePath>
+            </File>
+            <File>
+              <FileName>BH1750.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\BH1750\BH1750.c</FilePath>
             </File>
           </Files>
         </Group>

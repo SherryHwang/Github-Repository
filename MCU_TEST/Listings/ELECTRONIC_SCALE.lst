@@ -1,0 +1,66 @@
+C51 COMPILER V9.56.0.0   ELECTRONIC_SCALE                                                  08/10/2018 20:37:18 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE ELECTRONIC_SCALE
+OBJECT MODULE PLACED IN .\Objects\ELECTRONIC_SCALE.obj
+COMPILER INVOKED BY: D:\Software\C51\C51\BIN\C51.EXE ELECTRONIC_SCALE\ELECTRONIC_SCALE.c OPTIMIZE(8,SPEED) BROWSE INCDIR
+                    -(.\IIC;.\LCD1602;.\DELAY;.\PCF8591;.\SENSOR;.\USER;.\7SEG;.\WIFI;.\DEFINE;.\DS18B20;.\ELECTRONIC_SCALE;..\MCU_TEST;.\LAT
+                    -TICE;.\ADXL345;.\BH1750) DEBUG OBJECTEXTEND PRINT(.\Listings\ELECTRONIC_SCALE.lst) TABS(2) OBJECT(.\Objects\ELECTRONIC_S
+                    -CALE.obj)
+
+line level    source
+
+   1          #include "ELECTRONIC_SCALE.h"
+   2          #include "DEFINE.h"
+   3          #include "7SEG.h"
+   4          unsigned long Data;//32位，HX711输出
+   5          unsigned long first ;
+   6          unsigned long ElectronicScalse_ReadCount(void)
+   7          {
+   8   1        unsigned long Count;//32位
+   9   1        uchar i;
+  10   1        ADSK=0;//SCK
+  11   1        Count=0;
+  12   1        while(ADDO);//等待A/D转换完成 转换完成变为低电平
+  13   1        for (i=0;i<24;i++) //读24位
+  14   1        {
+  15   2          ADSK=1;  //数据上升沿
+  16   2          if(ADDO) Count++; //读出数据为1 加1
+  17   2          ADSK=0;
+  18   2          Count=Count<<1;//左移一位
+  19   2        }
+  20   1        ADSK=1;
+  21   1        Count=Count^0x800000;//异或
+  22   1        ADSK=0;
+  23   1        return  (Count);
+  24   1      }
+  25          //void ElectronicScalse_clear(void)
+  26          //{
+  27          //  uchar j,num;
+  28          //  unsigned long cd;
+  29          //  for(j = 0;j<20;j++)
+  30          //  {
+  31          //    Data= ElectronicScalse_ReadCount();//AD值
+  32          //    Data /= 100;
+  33          //    cd = Data;
+  34          //    cd = (cd /7.16+0.05);
+  35          //    first = cd;
+  36          //    cd -= first;
+  37          //    Display_NUM(cd);
+  38          //  }
+  39          //}
+  40          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     53    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      8    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

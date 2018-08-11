@@ -1,0 +1,75 @@
+C51 COMPILER V9.56.0.0   LATTICE                                                           08/10/2018 20:37:18 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE LATTICE
+OBJECT MODULE PLACED IN .\Objects\LATTICE.obj
+COMPILER INVOKED BY: D:\Software\C51\C51\BIN\C51.EXE LATTICE\LATTICE.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\IIC;.\LCD1602;.
+                    -\DELAY;.\PCF8591;.\SENSOR;.\USER;.\7SEG;.\WIFI;.\DEFINE;.\DS18B20;.\ELECTRONIC_SCALE;..\MCU_TEST;.\LATTICE;.\ADXL345;.\B
+                    -H1750) DEBUG OBJECTEXTEND PRINT(.\Listings\LATTICE.lst) TABS(2) OBJECT(.\Objects\LATTICE.obj)
+
+line level    source
+
+   1          #include "LATTICE.h"
+   2          #include "Delay.h"
+   3          //左边的显示字模库
+   4          uchar code left[10][8]={0xf0,0x90,0x90,0x90,0x90,0x90,0x90,0xf0,//0
+   5                                          0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x60,//1
+   6                                          0xf0,0x10,0x10,0xf0,0x80,0x80,0x80,0xf0,//2
+   7                                          0xf0,0x10,0x10,0xf0,0x10,0x10,0x10,0xf0,
+   8                                          0xa0,0xa0,0xa0,0xf0,0x20,0x20,0x20,0x20,
+   9                                          0xf0,0x80,0x80,0xf0,0x10,0x10,0x10,0xf0,
+  10                                          0xf0,0x80,0x80,0xf0,0x90,0x90,0x90,0xf0,
+  11                                          0xf0,0x10,0x10,0x10,0x10,0x10,0x10,0x10,
+  12                                          0xf0,0x90,0x90,0xf0,0x90,0x90,0x90,0xf0,
+  13                                          0xf0,0x90,0x90,0xf0,0x10,0x10,0x10,0xf0
+  14          };
+  15          //右边的显示字模库
+  16          uchar code right[10][8]={0x0f,0x09,0x09,0x09,0x09,0x09,0x09,0x0f,//0
+  17                                           0x06,0x06,0x06,0x06,0x06,0x06,0x06,0x06,//1
+  18                                           0x0f,0x01,0x01,0x0f,0x08,0x08,0x08,0x0f,//2
+  19                                           0x0f,0x01,0x01,0x0f,0x01,0x01,0x01,0x0f,//3
+  20                                           0x0a,0x0a,0x0a,0x0f,0x02,0x02,0x02,0x02,//4
+  21                                           0x0f,0x08,0x08,0x0f,0x01,0x01,0x01,0x0f,//5
+  22                                           0x0f,0x08,0x08,0x0f,0x09,0x09,0x09,0x0f,//6
+  23                                           0x0f,0x01,0x01,0x01,0x01,0x01,0x01,0x01,//7
+  24                                           0x0f,0x09,0x09,0x0f,0x09,0x09,0x09,0x0f,//8
+  25                                           0x0f,0x09,0x09,0x0f,0x01,0x01,0x01,0x0f//9
+  26          };
+  27          
+  28          void Lattice_Select_Row(uchar row)//行译码
+  29          {
+  30   1        LED8X8_RowSelect0  =  row/4;          //5-C
+  31   1        LED8X8_RowSelect1  =  row/2%2;        //6-B
+  32   1        LED8X8_RowSelect2  =  row%2;          //7-A
+  33   1      }
+  34          
+  35          void Lattice_Show(uint n)//点阵显示函数
+  36          {
+  37   1        uchar i,j,ten,one;
+  38   1        ten=n/10;one=n%10;
+  39   1        for(j=0;j<10;j++)
+  40   1        {
+  41   2          for(i=0;i<8;i++)
+  42   2          {
+  43   3            Lattice_Select_Row(i);
+  44   3            P0=left[ten][i]+right[one][i];
+  45   3            Delay_us(20);
+  46   3          }
+  47   2        }
+  48   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    141    ----
+   CONSTANT SIZE    =    160    ----
+C51 COMPILER V9.56.0.0   LATTICE                                                           08/10/2018 20:37:18 PAGE 2   
+
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

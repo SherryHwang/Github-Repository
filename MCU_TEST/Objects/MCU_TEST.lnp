@@ -3,6 +3,13 @@
 ".\Objects\LCD1602.obj",
 ".\Objects\PCF8591.obj",
 ".\Objects\Delay.obj",
+".\Objects\7SEG.obj",
+".\Objects\WIFI.obj",
+".\Objects\DS18B20.obj",
+".\Objects\ELECTRONIC_SCALE.obj",
+".\Objects\ADXL345.obj",
+".\Objects\LATTICE.obj",
+".\Objects\BH1750.obj",
 ".\Objects\SENSOR.obj" 
 TO ".\Objects\MCU_TEST" 
 PRINT(".\Listings\MCU_TEST.m51") RAMSIZE(256) 

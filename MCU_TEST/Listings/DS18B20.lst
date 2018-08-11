@@ -1,0 +1,170 @@
+C51 COMPILER V9.56.0.0   DS18B20                                                           08/10/2018 20:37:17 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE DS18B20
+OBJECT MODULE PLACED IN .\Objects\DS18B20.obj
+COMPILER INVOKED BY: D:\Software\C51\C51\BIN\C51.EXE DS18B20\DS18B20.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\IIC;.\LCD1602;.
+                    -\DELAY;.\PCF8591;.\SENSOR;.\USER;.\7SEG;.\WIFI;.\DEFINE;.\DS18B20;.\ELECTRONIC_SCALE;..\MCU_TEST;.\LATTICE;.\ADXL345;.\B
+                    -H1750) DEBUG OBJECTEXTEND PRINT(.\Listings\DS18B20.lst) TABS(2) OBJECT(.\Objects\DS18B20.obj)
+
+line level    source
+
+   1          #include "DS18B20.h"
+   2          #include "intrins.h"
+   3          #include "Delay.h"
+   4          #include "LCD1602.h"
+   5          
+   6          extern bit flag;  //引用主函数
+   7          uint d;
+   8          uchar tflag;            //温度正负标志
+   9          
+  10          void TempDelay(uchar us)
+  11          {
+  12   1        while(us--); //6.51us
+  13   1      }
+  14          /********************************************************************
+  15          *函数名：ds_reset
+  16          *函数功能：初始化DS18B20
+  17          *输入：无
+  18          *输出：无
+  19          ***********************************************************************/
+  20          void ds_reset()
+  21          {
+  22   1        ds=1;
+  23   1        _nop_();
+  24   1        ds=0;
+  25   1        TempDelay(80);//将主机总线拉低520us左右,协议要求480us~960us
+  26   1        ds=1;        //拉高(释放)总线，如果DS18B20作出反应将在15us~60us后将总线拉低
+  27   1        TempDelay(5);//延时大于60us,确保接下来DS18B20能60~240us的存在脉冲应答
+  28   1        if(ds==0)   //DS18B20发出存在脉冲，初始化成功
+  29   1          flag=1;
+  30   1        else
+  31   1          flag=0;
+  32   1        TempDelay(20);//延时达240us,让DS18B20释放总线
+  33   1        ds=1;
+  34   1      }
+  35          /********************************************************************
+  36          *函数名：ds_read_bit
+  37          *函数功能:从DS18B20中读一位值
+  38          *输入：无
+  39          *输出：返回1bit
+  40          **************************************************************/
+  41          bit ds_read_bit()
+  42          {//数据线从逻辑高电平拉低至低电平时，产生读时间片
+  43   1        bit dat;
+  44   1        ds=0;
+  45   1        _nop_();
+  46   1        _nop_();//延时约2us,符合协议要求的至少延时1us
+  47   1        ds=1;
+  48   1        _nop_();
+  49   1        dat=ds;
+  50   1        TempDelay(12);
+  51   1        return dat;
+  52   1      }
+  53          /********************************************************************
+C51 COMPILER V9.56.0.0   DS18B20                                                           08/10/2018 20:37:17 PAGE 2   
+
+  54          *函数名：ds_read_byte
+  55          *函数功能:从DS18B20中读一个字节
+  56          *输入：无
+  57          *输出：返回1Byte
+  58          ***********************************************************************/
+  59          uchar ds_read_byte()
+  60          {
+  61   1        uchar i,j,value;
+  62   1        for(i=0;i<8;i++)
+  63   1        {
+  64   2          j=ds_read_bit();
+  65   2          value=(j<<7)|(value>>1);
+  66   2        }
+  67   1        return value;
+  68   1      }
+  69          /********************************************************************
+  70          *函数名：Write_Byte
+  71          *函数功能:向DS18B20中写一个字节
+  72          *输入：byteval，数据类型：uchar
+  73          *输出：无
+  74          ***********************************************************************/
+  75          void ds_write_byte(uchar dat)
+  76          {
+  77   1        uchar i,onebit;
+  78   1        for(i=0;i<8;i++)
+  79   1        {
+  80   2          onebit=dat&0x01;
+  81   2          if(onebit)     ////写"1",将DS在15us~60us内拉高，即完成写1
+  82   2          {
+  83   3            ds=0;
+  84   3            TempDelay(1);
+  85   3            ds=1; //完成写1
+  86   3            _nop_();
+  87   3          }
+  88   2          else  ////写"0",在15us~60us期间依旧检测到DS为低电平,即完成写0
+  89   2          {
+  90   3            ds=0;
+  91   3            TempDelay(11);//延时约66us,在60us之后依旧检测到低电平,即完成写0
+  92   3            ds=1;
+  93   3            _nop_();
+  94   3          }
+  95   2          dat>>=1;
+  96   2        }
+  97   1      }
+  98          void ds_change()
+  99          {
+ 100   1        ds_reset();          //DS18B20初始化成功
+ 101   1        ds_write_byte(0xcc); //跳过读序列号
+ 102   1        ds_write_byte(0x44); //启动温度转换
+ 103   1      }
+ 104          /********************************************************************
+ 105          *函数名：get_temperature
+ 106          *函数功能:读取器件温度值并转换成实际温度
+ 107          *输入：无
+ 108          *输出：实际温度值
+ 109          ***********************************************************************/
+ 110          uint get_temperature()
+ 111          {
+ 112   1        uchar TMPL,TMPH;
+ 113   1        float temperature;
+ 114   1        ds_reset();
+ 115   1        ds_write_byte(0xcc);    //跳过读序列号
+C51 COMPILER V9.56.0.0   DS18B20                                                           08/10/2018 20:37:17 PAGE 3   
+
+ 116   1        ds_write_byte(0xbe);    //读取温度
+ 117   1        TMPL=ds_read_byte();   //先读出的是温度数据低8位
+ 118   1        TMPH=ds_read_byte();  //读出的是温度数据高8位
+ 119   1        d=TMPH;
+ 120   1        d<<=8;
+ 121   1        d|=TMPL;
+ 122   1        temperature=d*0.0625;
+ 123   1        d=temperature*10+0.5;  //实际温度保留一位小数
+ 124   1        return d;
+ 125   1      } 
+ 126          void Display_Temperature(uint d)
+ 127          { 
+ 128   1        if(tflag==0)
+ 129   1        {
+ 130   2          lcd1602_write_char(1,1,'+');
+ 131   2        }
+ 132   1        else
+ 133   1        {
+ 134   2          lcd1602_write_char(1,1,'-');
+ 135   2        }
+ 136   1        lcd1602_write_char(2,0,'0' + d / 1000);
+ 137   1        lcd1602_write_char(3,0,'0' + (d % 1000) / 100);
+ 138   1        lcd1602_write_char(4,0,'0' + (d % 100) / 10);
+ 139   1        lcd1602_write_char(5,0,'.');
+ 140   1        lcd1602_write_char(6,0,'0' + d % 10);
+ 141   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    377    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      3       6
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,57 @@
+C51 COMPILER V9.56.0.0   7SEG                                                              08/10/2018 20:37:17 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE 7SEG
+OBJECT MODULE PLACED IN .\Objects\7SEG.obj
+COMPILER INVOKED BY: D:\Software\C51\C51\BIN\C51.EXE 7SEG\7SEG.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\IIC;.\LCD1602;.\DELAY
+                    -;.\PCF8591;.\SENSOR;.\USER;.\7SEG;.\WIFI;.\DEFINE;.\DS18B20;.\ELECTRONIC_SCALE;..\MCU_TEST;.\LATTICE;.\ADXL345;.\BH1750)
+                    - DEBUG OBJECTEXTEND PRINT(.\Listings\7SEG.lst) TABS(2) OBJECT(.\Objects\7SEG.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          #include "7SEG.h"
+   3          #include "Delay.h"
+   4          #include <math.h>
+   5          uchar code led_data[11] = {0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x40}; //0-A编码
+   6          sbit LS138A = P3^4;   //定义138译码器的输入A脚由P2.0控制 
+   7          sbit LS138B = P3^5;     //定义138译码器的输入脚B由P2.1控制
+   8          sbit LS138C = P3^6;   //定义138译码器的输入脚C由P2.2控制
+   9          void Display_NUM(long n)            //显示数据
+  10          {
+  11   1        uchar i;
+  12   1        for(i = 0;i<8;i++)
+  13   1        { 
+  14   2          P0 = 0;
+  15   2          switch(i)   //使用switch 语句控制位选  也可以是用查表的方式 学员可以试着自己修改          
+  16   2          {     
+  17   3            case 0:LS138A=1; LS138B=1; LS138C=1;  break;         
+  18   3            case 1:LS138A=0; LS138B=1; LS138C=1;  break;              
+  19   3            case 2:LS138A=1; LS138B=0; LS138C=1;  break; 
+  20   3            case 3:LS138A=0; LS138B=0; LS138C=1;  break; 
+  21   3            case 4:LS138A=1; LS138B=1; LS138C=0;  break;
+  22   3            case 5:LS138A=0; LS138B=1; LS138C=0;  break;
+  23   3            case 6:LS138A=1; LS138B=0; LS138C=0;  break;
+  24   3            case 7:LS138A=0; LS138B=0; LS138C=0;  break;
+  25   3          }
+  26   2          Delay_ms(1);
+  27   2          P0 = led_data[n%10];
+  28   2          Delay_ms(1);
+  29   2          n = n / 10;
+  30   2          
+  31   2        }
+  32   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    181    ----
+   CONSTANT SIZE    =     11    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       5
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

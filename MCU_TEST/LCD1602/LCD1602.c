@@ -13,9 +13,9 @@ void lcd1602_write_cmd(unsigned char cmd)  //写命令
     lcd1602_io = cmd;
     lcd1602_rs = 0;
     lcd1602_en = 0;
-    Delay(10);
+    Delay_ms(10);
     lcd1602_en = 1;
-    Delay(10);
+    Delay_ms(10);
     lcd1602_en = 0;
 }
 
@@ -24,9 +24,9 @@ void lcd1602_write_data(unsigned char dat) //写数据
     lcd1602_io = dat;
     lcd1602_rs = 1;
     lcd1602_en = 0;
-    Delay(10);
+    Delay_ms(10);
     lcd1602_en = 1;
-    Delay(10);
+    Delay_ms(10);
     lcd1602_en = 0;
 
 }
@@ -35,13 +35,13 @@ void lcd1602_init()
 {
     lcd1602_rw = 0;
     lcd1602_write_cmd(0x38);   //显示模式设置：16×2显示，5×7点阵，8位数据接口
-    Delay(20);
+    Delay_ms(20);
     lcd1602_write_cmd(0x0e);   //显示模式设置
-    Delay(20);
+    Delay_ms(20);
     lcd1602_write_cmd(0x06);   //显示模式设置：光标右移，字符不移
-    Delay(20);
+    Delay_ms(20);
     lcd1602_write_cmd(0x01);   //清屏幕指令，将以前的显示内容清除
-    Delay(20);
+    Delay_ms(20);
 }
 
 void lcd1602_write_char(unsigned char x, unsigned char y, unsigned char dat) //坐标定位
@@ -67,6 +67,15 @@ void lcd1602_write_string(unsigned char x, unsigned char y, unsigned char *dat) 
     {
         lcd1602_write_data(*dat);
         dat++;
-        Delay(1);
+        Delay_ms(1);
     }
+}
+
+void lcd1602_display_data(uchar str[],uchar dat)
+{
+	lcd1602_write_cmd(0x01);
+  lcd1602_write_string(0,0,str);
+	lcd1602_write_char(0,1,'0' + dat / 100);
+	lcd1602_write_char(1,1,'0' + (dat % 100) / 10);
+	lcd1602_write_char(2,1,'0' + dat % 10);
 }
